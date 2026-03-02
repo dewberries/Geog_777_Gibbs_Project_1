@@ -19,3 +19,6 @@ outputs/
 *.aux.xml
 *.ovr
 *.rrd
+
+.DS_Store
+*.lnk
