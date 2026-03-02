@@ -12,7 +12,7 @@ Cancer–Nitrate Spatial Analysis Tool:
     - Runs IDW interpolation on well nitrate values
     - Calculates mean nitrate per census tract
     - Performs OLS regression (canrate ~ mean_nitrate)
-    - Exports a regression report and static PNG map
+    - Exports a regression report TXT, regression scatterplot PNG, and static map PNG
 
 
 Requirements:

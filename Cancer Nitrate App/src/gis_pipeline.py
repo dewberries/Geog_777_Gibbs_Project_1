@@ -81,7 +81,6 @@ def run_pipeline(k: float, out_base: str, log=None, progress_callback=None) -> d
     must_be_projected(wells_path)
     must_be_projected(tracts_path)
 
-    # Spatial Analyst required
     if arcpy.CheckExtension("Spatial") != "Available":
         stop("Spatial Analyst extension not available (required).")
     arcpy.CheckOutExtension("Spatial")
@@ -145,7 +144,6 @@ def run_pipeline(k: float, out_base: str, log=None, progress_callback=None) -> d
 
     prog(80)
 
-    # Rename MEAN -> mean_nitrate (simple approach)
     if not arcpy.ListFields(joined_fc, "mean_nitrate"):
         arcpy.management.AddField(joined_fc, "mean_nitrate", "DOUBLE")
     arcpy.management.CalculateField(joined_fc, "mean_nitrate", "!MEAN!", "PYTHON3")
@@ -174,6 +172,34 @@ def run_pipeline(k: float, out_base: str, log=None, progress_callback=None) -> d
     ss_res = float(np.sum((y - y_hat) ** 2))
     ss_tot = float(np.sum((y - np.mean(y)) ** 2))
     r2 = 1.0 - (ss_res / ss_tot if ss_tot != 0 else math.nan)
+
+    say("Exporting scatter plot PNG...")
+    scatter_path = run_dir / f"scatter_k{safe_k}.png"
+
+    fig, ax = plt.subplots(figsize=(7.0, 5.0), dpi=150)
+
+    ax.scatter(x, y, s=8)
+
+    x_line = np.linspace(float(np.min(x)), float(np.max(x)), 200)
+    y_line = b0 + b1 * x_line
+    ax.plot(x_line, y_line)
+
+    ax.set_title(f"Regression: {CANCER_FIELD} vs mean_nitrate (k={k})")
+    ax.set_xlabel("mean_nitrate")
+    ax.set_ylabel(CANCER_FIELD)
+
+    ax.text(
+        0.02, 0.98,
+        f"y = {b0:.4f} + {b1:.4f}x\nR² = {r2:.4f}\nn = {len(x)}",
+        transform=ax.transAxes,
+        va="top"
+    )
+
+    fig.tight_layout()
+    fig.savefig(scatter_path)
+    plt.close(fig)
+
+    say(f"Scatter PNG: {scatter_path}")
 
     reg_path = run_dir / f"summary_regression_k{safe_k}.txt"
     with open(reg_path, "w", encoding="utf-8") as f:
@@ -236,5 +262,6 @@ def run_pipeline(k: float, out_base: str, log=None, progress_callback=None) -> d
         "gdb": str(gdb),
         "joined_fc": joined_fc,
         "regression_report": str(reg_path),
+        "scatter_png": str(scatter_path),
         "map_png": str(png_path),
     }

@@ -53,9 +53,13 @@ class App(tk.Tk):
         right.pack(side="left", fill="both", expand=True)
 
         ttk.Label(left, text="Status:").pack(anchor="w")
-        self.log_box = tk.Text(left, height=36, wrap="word")
+        self.log_box = tk.Text(left, height=10, wrap="word")
         self.log_box.pack(fill="both", expand=False, pady=(6, 0))
         self.log_box.configure(state="disabled")
+
+        ttk.Label(left, text="Regression Scatter:").pack(anchor="w", pady=(10, 0))
+        self.scatter_label = ttk.Label(left)
+        self.scatter_label.pack(fill="both", expand=True, pady=(6, 0))
 
         ttk.Label(right, text="Map Preview (PNG):").pack(anchor="w")
         self.map_label = ttk.Label(right)
@@ -110,6 +114,7 @@ class App(tk.Tk):
                 self._last_run_dir = result["run_dir"]
                 self._last_report = result["regression_report"]
                 self.after(0, lambda: self.update_preview(result["map_png"]))
+                self.after(0, lambda: self.update_scatter_preview(result["scatter_png"]))
                 self.after(0, lambda: self.open_out_btn.configure(state="normal"))
                 self.after(0, lambda: self.open_rep_btn.configure(state="normal"))
                 self.after(0, lambda: messagebox.showinfo("Complete", "Run finished."))
@@ -148,6 +153,30 @@ class App(tk.Tk):
 
         except Exception as e:
             self.log(f"Preview error: {e}")
+
+
+    def update_scatter_preview(self, png_path: str):
+        try:
+            from PIL import Image, ImageTk
+
+            img = Image.open(png_path)
+
+            w = self.scatter_label.winfo_width()
+            h = self.scatter_label.winfo_height()
+            if w < 50 or h < 50:
+                self.update_idletasks()
+                w = self.scatter_label.winfo_width()
+                h = self.scatter_label.winfo_height()
+
+            img.thumbnail((max(1, w - 10), max(1, h - 10)))
+
+            tk_img = ImageTk.PhotoImage(img)
+            self._scatter_img_ref = tk_img
+            self.scatter_label.configure(image=tk_img)
+
+            self.log("Scatter preview updated.")
+        except Exception as e:
+            self.log(f"Scatter preview error: {e}")
 
     def open_output(self):
         if self._last_run_dir and os.path.isdir(self._last_run_dir):
