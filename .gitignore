@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Local outputs
+outputs/
+*.log
+
+# ArcGIS locks
+*.lock
+*.sr.lock
+*.rlock
+
+#GIS outputs
+*.gdb/
+*.tif
+*.img
+*.aux.xml
+*.ovr
+*.rrd
